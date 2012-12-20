@@ -1,0 +1,73 @@
+#!/usr/bin/env python
+
+# coding: utf8
+
+# your uwsgi stat socket addr/path here
+UWSGI_STATS = 'new-server:50000'
+
+import os, os.path, sys, time, datetime, json, re, socket
+
+if ':' in UWSGI_STATS:
+    t = UWSGI_STATS.split(':')
+    sfamily, addr = (socket.AF_INET, (t[0], int(t[1])) )
+else:
+    sfamily, addr = (socket.AF_UNIX, UWSGI_STATS)
+
+js = ''
+try:
+    s = socket.socket(sfamily, socket.SOCK_STREAM)
+    s.settimeout(3)
+    s.connect( addr )
+
+    while True:
+        data = s.recv(4096)
+        if len(data) < 1:
+            break
+        js += data
+except:
+    import traceback
+    traceback.print_exc()
+    raise Exception("unable to get uWSGI statistics")
+
+dd = json.loads(js or '{}')
+
+mode = os.path.basename(__file__).partition('_')[2]
+print mode
+
+modes = {
+    'listen_queue': 'listen queue',
+    'listen_queue_errors': 'listen queue errors',
+
+    'requests': 'requests', 
+    'exceptions': 'exceptions',
+    'vsz': 'physical memory',
+    'tx': 'send bytes',
+    'avg_rt': 'average response time',
+}
+
+
+
+if len(sys.argv)>1:
+    opt = sys.argv[1]
+
+    if opt == 'suggest':
+        print '\n'.join(modes.keys())
+    elif opt == 'config' and mode in modes:
+        out = ('graph_title %(desc)s\n'
+               'graph_vlabel %(name)s\n'
+               'graph_category uWSGI\n')
+        if mode in ['tx', 'avg_rt']:
+            out += 'graph_args --base 1024\n'
+        if mode in ['requests', 'exceptions', 'tx']:
+            out += '%(name)s.type DERIVE\n'
+            out += '%(name)s.min 0'
+        out += "%(name)s.label %(name)s"
+        out = out % {'name': mode, 'desc': modes[mode]}
+        print out
+else:
+    if mode in ['listen_queue', 'listen_queue_errors']:
+        value = dd.get(mode, 0)
+    else:
+        workers = dd.get('workers', [])
+        value = sum([x.get(mode, 0) for x in workers])
+    print '%s.value %s' % (mode, value)
