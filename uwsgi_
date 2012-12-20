@@ -13,26 +13,7 @@ if ':' in UWSGI_STATS:
 else:
     sfamily, addr = (socket.AF_UNIX, UWSGI_STATS)
 
-js = ''
-try:
-    s = socket.socket(sfamily, socket.SOCK_STREAM)
-    s.settimeout(3)
-    s.connect( addr )
-
-    while True:
-        data = s.recv(4096)
-        if len(data) < 1:
-            break
-        js += data
-except:
-    import traceback
-    traceback.print_exc()
-    raise Exception("unable to get uWSGI statistics")
-
-dd = json.loads(js or '{}')
-
 mode = os.path.basename(__file__).partition('_')[2]
-print mode
 
 modes = {
     'listen_queue': 'listen queue',
@@ -65,6 +46,27 @@ if len(sys.argv)>1:
         out = out % {'name': mode, 'desc': modes[mode]}
         print out
 else:
+
+
+    js = ''
+    try:
+        s = socket.socket(sfamily, socket.SOCK_STREAM)
+        s.settimeout(3)
+        s.connect( addr )
+
+        while True:
+            data = s.recv(4096)
+            if len(data) < 1:
+                break
+            js += data
+    except:
+        import traceback
+        traceback.print_exc()
+        raise Exception("unable to get uWSGI statistics")
+
+    dd = json.loads(js or '{}')
+
+
     if mode in ['listen_queue', 'listen_queue_errors']:
         value = dd.get(mode, 0)
     else:
