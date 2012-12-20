@@ -5,6 +5,9 @@ Detailed uwsgi stats plugin for munin
 
 use stats
 
+
+License: BSD
+
 Related work:
  - http://projects.unbit.it/uwsgi/wiki/StatsServer
  - https://github.com/unbit/uwsgitop/blob/master/uwsgitop
