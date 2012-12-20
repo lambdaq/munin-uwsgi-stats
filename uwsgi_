@@ -77,3 +77,4 @@ else:
         workers = dd.get('workers', [])
         value = sum([x.get(mode, 0) for x in workers])
     print '%s.value %s' % (mode, value)
+
