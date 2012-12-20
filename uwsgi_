@@ -36,7 +36,7 @@ if len(sys.argv)>1:
     elif opt == 'install':
         p = os.path.realpath(__file__)
         for x in modes.keys():
-            os.system('ln -s %s /etc/munin/plugins/%s%s' % (p, name, x))
+            os.system('ln -s %s /etc/munin/plugins/%s_%s' % (p, name, x))
     elif opt == 'config' and mode in modes:
         out = ('graph_title %(desc)s\n'
                'graph_vlabel %(name)s\n'
