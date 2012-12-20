@@ -3,8 +3,12 @@ munin-uwsgi-stats
 
 Detailed uwsgi stats plugin for munin
 
-use stats
+Install:
 
+sudo wget -O /usr/share/munin/plugins/uwsgi_  https://github.com/stevetu/munin-uwsgi-stats/raw/master/uwsgi_
+sudo chmod 755 /usr/share/munin/plugins/uwsgi_
+sudo vi /usr/share/munin/plugins/uwsgi_ #edit UWSGI_STATS for host
+sudo /usr/share/munin/plugins/uwsgi_ install 
 
 License: BSD
 
