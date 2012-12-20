@@ -69,12 +69,13 @@ else:
         raise Exception("unable to get uWSGI statistics")
 
     dd = json.loads(js or '{}')
-
+    workers = dd.get('workers', [])
 
     if mode in ['listen_queue', 'listen_queue_errors']:
         value = dd.get(mode, 0)
+    elif mode in ['avg_rt']:
+        value = sum([x.get(mode, 0)/1000 for x in workers]) / len(workers)
     else:
-        workers = dd.get('workers', [])
         value = sum([x.get(mode, 0) for x in workers])
     print '%s.value %s' % (mode, value)
 
