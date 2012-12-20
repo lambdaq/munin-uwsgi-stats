@@ -3,7 +3,7 @@
 # coding: utf8
 
 # your uwsgi stat socket addr/path here
-UWSGI_STATS = 'new-server:50000'
+UWSGI_STATS = '127.0.0.1:50000'
 
 import os, os.path, sys, time, datetime, json, re, socket
 
