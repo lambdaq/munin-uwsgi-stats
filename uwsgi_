@@ -13,7 +13,7 @@ if ':' in UWSGI_STATS:
 else:
     sfamily, addr = (socket.AF_UNIX, UWSGI_STATS)
 
-mode = os.path.basename(__file__).partition('_')[2]
+name, p, mode = os.path.basename(__file__).partition('_')
 
 modes = {
     'listen_queue': 'listen queue',
@@ -33,6 +33,10 @@ if len(sys.argv)>1:
 
     if opt == 'suggest':
         print '\n'.join(modes.keys())
+    elif opt == 'install':
+        p = os.path.realpath(__file__)
+        for x in modes.keys():
+            os.system('ln -s %s /etc/munin/plugins/%s%s' % (p, name, x)):
     elif opt == 'config' and mode in modes:
         out = ('graph_title %(desc)s\n'
                'graph_vlabel %(name)s\n'
