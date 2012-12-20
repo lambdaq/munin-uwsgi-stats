@@ -41,11 +41,11 @@ if len(sys.argv)>1:
         out = ('graph_title %(desc)s\n'
                'graph_vlabel %(name)s\n'
                'graph_category uWSGI\n')
-        if mode in ['tx', 'avg_rt']:
+        if mode in ['tx', 'vsz']:
             out += 'graph_args --base 1024\n'
         if mode in ['requests', 'exceptions', 'tx']:
             out += '%(name)s.type DERIVE\n'
-            out += '%(name)s.min 0'
+            out += '%(name)s.min 0\n'
         out += "%(name)s.label %(name)s"
         out = out % {'name': mode, 'desc': modes[mode]}
         print out
