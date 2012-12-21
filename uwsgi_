@@ -11,17 +11,14 @@
 env.addr = 127.0.0.1:4999
 """
 
-UWSGI_STATS = '' # 127.0.0.1:4999
+UWSGI_STATS = ''
 
 import os, os.path, sys, time, datetime, json, re, socket
 
 
+UWSGI_STATS = UWSGI_STATS or os.environ.get('addr', '')
 if not UWSGI_STATS:
-    r = os.environ.get('addr', '')
-    if r:
-        UWSGI_STATS = r
-    else:
-        raise Exception('uWSGI stats config not found.')
+    raise Exception('uWSGI stats config not found.')
 
 
 if ':' in UWSGI_STATS:
