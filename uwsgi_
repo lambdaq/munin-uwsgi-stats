@@ -14,11 +14,11 @@ env.addr = 127.0.0.1:4999
 UWSGI_STATS = ''
 
 import os, os.path, sys, time, datetime, json, re, socket
-
+from pprint import pformat
 
 UWSGI_STATS = UWSGI_STATS or os.environ.get('addr', '')
 if not UWSGI_STATS:
-    raise Exception('uWSGI stats config not found.')
+    raise Exception('uWSGI stats config not found. %s' % pformat(os.environ))
 
 
 if ':' in UWSGI_STATS:
@@ -80,7 +80,7 @@ else:
     except:
         import traceback
         traceback.print_exc()
-        raise Exception("unable to get uWSGI statistics")
+        raise Exception("unable to get uWSGI stats at %s" % addr)
 
     dd = json.loads(js or '{}')
     workers = dd.get('workers', [])
