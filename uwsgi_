@@ -3,9 +3,22 @@
 # coding: utf8
 
 # your uwsgi stat socket addr/path here
-UWSGI_STATS = '127.0.0.1:50000'
+
+"""
+/etc/munin/plugin-conf.d/munin-node
+
+[uwsgi_*]
+env.addr = 127.0.0.1:4999
+"""
+
+UWSGI_STATS = '' # 127.0.0.1:50000
 
 import os, os.path, sys, time, datetime, json, re, socket
+
+
+if not UWSGI_STATS:
+    UWSGI_STATS = os.environ.get('addr', '')
+
 
 if ':' in UWSGI_STATS:
     t = UWSGI_STATS.split(':')
