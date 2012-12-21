@@ -80,7 +80,7 @@ else:
     except:
         import traceback
         traceback.print_exc()
-        raise Exception("unable to get uWSGI stats at %s" % addr)
+        raise Exception("unable to get uWSGI stats at %s" % UWSGI_STATS)
 
     dd = json.loads(js or '{}')
     workers = dd.get('workers', [])
