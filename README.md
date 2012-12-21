@@ -14,17 +14,20 @@ Install:
 Config & test:
 --------------------
 
-    1. add stats server (see [1]) to your uWSGI config, restart uWSGI, e.g. use 127.0.0.1:4999
-    2. use `nc 127.0.0.1 4999` to see if there's any JSON output
-    3. edit `/etc/munin/plugin-conf.d/munin-node`
+1. add stats server (see [1]) to your uWSGI config, restart uWSGI, e.g. use 127.0.0.1:4999
+2. use `nc 127.0.0.1 4999` to see if there's any JSON output
+3. edit `/etc/munin/plugin-conf.d/munin-node`
 
-    [uwsgi_*]
-    env.addr 127.0.0.1:4999
+[uwsgi_*]
+env.addr 127.0.0.1:4999
 
-    4. Alternatively, you can edit `uesgi_` source code directly for the stats server address. The global variable is called `UWSGI_STATS`
+4. Alternatively, you can edit `uesgi_` source code directly for the stats server address. The global variable is called `UWSGI_STATS`
+5. `sudo munin-run uwsgi_requests` to test run munin
 
+License:
+--------------------
 
-License: BSD
+BSD
 
 Related work:
 --------------------
