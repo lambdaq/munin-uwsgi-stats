@@ -8,7 +8,8 @@
 /etc/munin/plugin-conf.d/munin-node
 
 [uwsgi_*]
-env.addr = 127.0.0.1:4999
+env.addr 127.0.0.1:4999
+
 """
 
 UWSGI_STATS = ''
