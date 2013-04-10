@@ -14,7 +14,7 @@ env.addr 127.0.0.1:4999
 
 UWSGI_STATS = ''
 
-import os, os.path, sys, time, datetime, json, re, socket
+import os, os.path, sys, json, socket
 from pprint import pformat
 
 UWSGI_STATS = UWSGI_STATS or os.environ.get('addr', '')
