@@ -21,7 +21,7 @@ Config & test:
     `[uwsgi_*]`    
     `env.addr 127.0.0.1:4999`
 
-4. Alternatively, you can edit `uesgi_` source code directly for the stats server address. The global variable is called `UWSGI_STATS`
+4. Alternatively, you can edit `uwsgi_` source code directly for the stats server address. The global variable is called `UWSGI_STATS`
 5. `sudo munin-run uwsgi_requests` to test run munin
 
 License:
