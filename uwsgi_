@@ -28,6 +28,8 @@ if ':' in UWSGI_STATS:
 else:
     sfamily, addr = (socket.AF_UNIX, UWSGI_STATS)
 
+graph_category = os.environ.get('category', 'uWSGI')
+
 name, p, mode = os.path.basename(__file__).partition('_')
 
 modes = {
@@ -53,16 +55,15 @@ if len(sys.argv)>1:
         for x in modes.keys():
             os.system('ln -s %s /etc/munin/plugins/%s_%s' % (p, name, x))
     elif opt == 'config' and mode in modes:
-        out = ('graph_title %(desc)s\n'
-               'graph_vlabel %(desc)s\n'
-               'graph_category uWSGI\n')
+        out = ('graph_title {0}\n'
+               'graph_vlabel {0}\n'
+               'graph_category {1}\n').format(modes[mode], graph_category)
         if mode in ['tx', 'vsz']:
             out += 'graph_args --base 1024\n'
         if mode in ['requests', 'exceptions', 'tx']:
-            out += '%(name)s.type DERIVE\n'
-            out += '%(name)s.min 0\n'
-        out += "%(name)s.label %(name)s"
-        out = out % {'name': mode, 'desc': modes[mode]}
+            out += ('{0}.type DERIVE\n'
+                   '{0}.min 0\n').format(mode)
+        out += "{0}.label {0}".format(mode)
         print out
     sys.exit(0)
 

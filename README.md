@@ -23,6 +23,18 @@ Config & test:
 
 4. Alternatively, you can edit `uwsgi_` source code directly for the stats server address. The global variable is called `UWSGI_STATS`
 5. `sudo munin-run uwsgi_requests` to test run munin
+6. Advanced setting: if you are monitoring more than one uwsgi applications
+   you can specify `env.category` (a string indicating under which category the
+   graphs will be grouped, the "graph_category", that is) like this:
+
+    `[uwsgi-myapp_*]`   
+    `env.addr 127.0.0.1:4999`   
+    `env.category uwsgi (myapp)`
+
+    `[uwsgi-myotherapp_*]`   
+    `env.addr 127.0.0.1:4998`   
+    `env.category uwsgi (myotherapp)`
+
 
 License:
 --------------------
