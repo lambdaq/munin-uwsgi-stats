@@ -27,7 +27,7 @@ Config & test:
 License:
 --------------------
 
-BSD
+Modified BSD - see file LICENSE for details
 
 Related work:
 --------------------
