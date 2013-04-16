@@ -1,95 +1,128 @@
 #!/usr/bin/env python
 
-# coding: utf8
-
-# your uwsgi stat socket addr/path here
-
-"""
-/etc/munin/plugin-conf.d/munin-node
-
-[uwsgi_*]
-env.addr 127.0.0.1:4999
-
-"""
-
-UWSGI_STATS = ''
-
-import os, os.path, sys, json, socket
-from pprint import pformat
-
-UWSGI_STATS = UWSGI_STATS or os.environ.get('addr', '')
-if not UWSGI_STATS:
-    raise Exception('uWSGI stats config not found. %s' % pformat(os.environ))
+import os
+import sys
+import json
+import socket
+import psutil
+from itertools import izip_longest
 
 
-if ':' in UWSGI_STATS:
-    t = UWSGI_STATS.split(':')
-    sfamily, addr = (socket.AF_INET, (t[0], int(t[1])) )
-else:
-    sfamily, addr = (socket.AF_UNIX, UWSGI_STATS)
-
-graph_category = os.environ.get('category', 'uWSGI')
-
-name, p, mode = os.path.basename(__file__).partition('_')
-
-modes = {
+MODES = {
     'listen_queue': 'listen queue',
     'listen_queue_errors': 'listen queue errors',
-
     'requests': 'requests per ${graph_period}', 
     'exceptions': 'exceptions',
-    'vsz': 'physical memory',
     'tx': 'send bytes',
     'avg_rt': 'average response time (ms)',
+    'rss': 'physical memory',
 }
 
 
+def config(apps):
+    out = ('graph_title {0}\n'
+           'graph_vlabel {0}\n'
+           'graph_category {1}\n').format(MODES[mode], 'uwsgi')
+    if mode in ['tx', 'rss']:
+        out += 'graph_args --base 1024\n'
+    if mode in ['requests', 'exceptions', 'tx']:
+        out += ('{0}.type DERIVE\n'
+               '{0}.min 0\n').format(mode)
+    for app in apps:
+        out += "{0}.label {0}\n".format(app["name"], mode)
+    return out
 
-if len(sys.argv)>1:
-    opt = sys.argv[1]
 
-    if opt == 'suggest':
-        print '\n'.join(modes.keys())
-    elif opt == 'install':
-        p = os.path.realpath(__file__)
-        for x in modes.keys():
-            os.system('ln -s %s /etc/munin/plugins/%s_%s' % (p, name, x))
-    elif opt == 'config' and mode in modes:
-        out = ('graph_title {0}\n'
-               'graph_vlabel {0}\n'
-               'graph_category {1}\n').format(modes[mode], graph_category)
-        if mode in ['tx', 'vsz']:
-            out += 'graph_args --base 1024\n'
-        if mode in ['requests', 'exceptions', 'tx']:
-            out += ('{0}.type DERIVE\n'
-                   '{0}.min 0\n').format(mode)
-        out += "{0}.label {0}".format(mode)
-        print out
-    sys.exit(0)
-
-js = ''
-try:
-    s = socket.socket(sfamily, socket.SOCK_STREAM)
+def get_data_from_uwsgi_stats_server(app):
+    """Return a json object with stuff returned by the uwsgi stats server.
+    """
+    s = socket.socket(app['socket_family'], socket.SOCK_STREAM)
     s.settimeout(3)
-    s.connect( addr )
-
+    s.connect(app['socket_address'])
+    js = ''
     while True:
         data = s.recv(4096)
         if len(data) < 1:
             break
         js += data
-except:
-    import traceback
-    traceback.print_exc()
-    raise Exception("unable to get uWSGI stats at %s" % UWSGI_STATS)
+    s.close()
+    return json.loads(js or '{}')
 
-dd = json.loads(js or '{}')
-workers = dd.get('workers', [])
 
-if mode in ['listen_queue', 'listen_queue_errors']:
-    value = dd.get(mode, 0)
-elif mode in ['avg_rt']:
-    value = sum([x.get(mode, 0)/1000 for x in workers]) / len(workers)
-else:
-    value = sum([x.get(mode, 0) for x in workers])
-print '%s.value %s' % (mode, value)
+def get_value_from_uwsgi_stats_server(app, mode):
+    dd = get_data_from_uwsgi_stats_server(app)
+    workers = dd.get('workers', [])
+    if mode in ['listen_queue', 'listen_queue_errors']:
+        value = dd.get(mode, 0)
+    elif mode in ['avg_rt']:
+        value = sum([x.get(mode, 0)/1000 for x in workers]) / len(workers)
+    else:
+        value = sum([x.get(mode, 0) for x in workers])
+    return value
+
+
+def get_master(app, master_processes):
+    """Return the master process for app given the set of all master processes.
+    The master process to return is the one that has open an appropriate
+    connection. If not found, returns None.
+    """
+    for m in master_processes:
+        for c in m.get_connections():
+            addr = c.local_address
+            if (len(addr) == 2 and str(addr[1]) == app["port"]) or (
+                    addr == app["port"]):
+                return m
+    return None
+    
+
+def get_uwsgi_processes(apps):
+    """Read the process table and add related data to apps.
+    Adds two items in each app: master_process (a Process object)
+    and worker_processes (a list of Process objects).
+    """
+    master_processes = []
+    for p in psutil.process_iter():
+        if p.cmdline[0] == 'uWSGI master':
+            master_processes.append(p)
+    for app in apps:
+        app['master_process'] = get_master(app, master_processes)
+        app['worker_processes'] = app['master_process'].get_children()
+
+
+def get_rss(app):
+    result = sum([x.get_memory_info().rss for x in app['worker_processes']])
+    result += app['master_process'].get_memory_info().rss
+    return result
+    
+
+ports = os.environ.get('port', '').split()
+names = os.environ.get('name', 'uwsgi').split()
+
+apps = [{ 'name': name } for name in names]
+for app, port in izip_longest(apps, ports, fillvalue=''):
+    app['port'] = port
+    if port.isdigit():
+        app['socket_family'] = socket.AF_INET
+        app['socket_address'] = ('127.0.0.1', int(port))
+    elif port:
+        app['socket_family'] = socket.AF_UNIX
+        app['socket_address'] = port
+    else:
+        app['socket_family'] = None
+        app['socket_address'] = None
+
+name, p, mode = os.path.basename(__file__).partition('_')
+
+if len(sys.argv)>1 and sys.argv[1]=='config':
+    print config(apps)
+    sys.exit(0)
+
+if mode == 'rss':
+    get_uwsgi_processes(apps)
+
+for app in apps:
+    if mode != 'rss':
+        result = get_value_from_uwsgi_stats_server(app, mode)
+    else:
+        result = get_rss(app)
+    print('{0}.value {1}'.format(app["name"], result))
