@@ -11,7 +11,7 @@ from itertools import izip_longest
 MODES = {
     'listen_queue': 'listen queue',
     'listen_queue_errors': 'listen queue errors',
-    'requests': 'requests per ${graph_period}', 
+    'requests': 'requests per ${graph_period}',
     'exceptions': 'exceptions',
     'tx': 'send bytes',
     'avg_rt': 'average response time (ms)',
@@ -55,7 +55,7 @@ def get_value_from_uwsgi_stats_server(app, mode):
     if mode in ['listen_queue', 'listen_queue_errors']:
         value = dd.get(mode, 0)
     elif mode in ['avg_rt']:
-        value = sum([x.get(mode, 0)/1000 for x in workers]) / len(workers)
+        value = sum([x.get(mode, 0) / 1000 for x in workers]) / len(workers)
     else:
         value = sum([x.get(mode, 0) for x in workers])
     return value
@@ -73,7 +73,7 @@ def get_master(app, master_processes):
                     addr == app["port"]):
                 return m
     return None
-    
+
 
 def get_uwsgi_processes(apps):
     """Read the process table and add related data to apps.
@@ -93,12 +93,12 @@ def get_rss(app):
     result = sum([x.get_memory_info().rss for x in app['worker_processes']])
     result += app['master_process'].get_memory_info().rss
     return result
-    
+
 
 ports = os.environ.get('port', '').split()
 names = os.environ.get('name', 'uwsgi').split()
 
-apps = [{ 'name': name } for name in names]
+apps = [{'name': name} for name in names]
 for app, port in izip_longest(apps, ports, fillvalue=''):
     app['port'] = port
     if port.isdigit():
@@ -116,7 +116,7 @@ name, p, mode = os.path.basename(__file__).partition('_')
 if mode == '':
     mode = 'requests'
 
-if len(sys.argv)>1 and sys.argv[1]=='config':
+if len(sys.argv) > 1 and sys.argv[1] == 'config':
     sys.stdout.write(config(apps))
     sys.exit(0)
 
