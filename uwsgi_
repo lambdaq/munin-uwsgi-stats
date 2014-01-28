@@ -25,11 +25,11 @@ def config(apps):
            'graph_category {1}\n').format(MODES[mode], 'uwsgi')
     if mode in ['tx', 'rss']:
         out += 'graph_args --base 1024\n'
-    if mode in ['requests', 'exceptions', 'tx']:
-        out += ('{0}.type DERIVE\n'
-               '{0}.min 0\n').format(mode)
     for app in apps:
         out += "{0}.label {0}\n".format(app["name"], mode)
+        if mode in ['requests', 'exceptions', 'tx']:
+            out += ('{0}.type DERIVE\n'
+                    '{0}.min 0\n').format(app["name"])
     return out
 
 
@@ -117,7 +117,7 @@ if mode == '':
     mode = 'requests'
 
 if len(sys.argv)>1 and sys.argv[1]=='config':
-    print config(apps)
+    sys.stdout.write(config(apps))
     sys.exit(0)
 
 if mode == 'rss':
