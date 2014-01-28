@@ -114,7 +114,7 @@ for app, port in izip_longest(apps, ports, fillvalue=''):
 name, p, mode = os.path.basename(__file__).partition('_')
 
 if len(sys.argv)>1 and sys.argv[1]=='config':
-    print config(apps)
+    sys.stdout.write(config(apps))
     sys.exit(0)
 
 if mode == 'rss':
