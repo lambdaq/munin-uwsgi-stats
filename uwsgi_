@@ -82,8 +82,12 @@ def get_uwsgi_processes(apps):
     """
     master_processes = []
     for p in psutil.process_iter():
-        if p.cmdline[0] == 'uWSGI master':
-            master_processes.append(p)
+        cmdline = p.cmdline()
+        try:
+            if cmdline[0] == '/usr/sbin/uwsgi' and cmdline[1] == '--master' and p.get_children():
+                master_processes.append(p)
+        except IndexError:
+            pass
     for app in apps:
         app['master_process'] = get_master(app, master_processes)
         app['worker_processes'] = app['master_process'].get_children()
