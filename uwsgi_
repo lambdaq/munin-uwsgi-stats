@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 import os
 import sys
 import json
 import socket
 import psutil
-from itertools import izip_longest
+from itertools import zip_longest
 
 
 MODES = {
@@ -36,15 +36,16 @@ def config(apps):
 def get_data_from_uwsgi_stats_server(app):
     """Return a json object with stuff returned by the uwsgi stats server.
     """
-    s = socket.socket(app['socket_family'], socket.SOCK_STREAM)
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.settimeout(3)
+    #print(app['socket_address'], flush=True, file=sys.stderr)
     s.connect(app['socket_address'])
     js = ''
     while True:
         data = s.recv(4096)
         if len(data) < 1:
             break
-        js += data
+        js += data.decode('utf-8')
     s.close()
     return json.loads(js or '{}')
 
@@ -103,7 +104,7 @@ ports = os.environ.get('port', '').split()
 names = os.environ.get('name', 'uwsgi').split()
 
 apps = [{'name': name} for name in names]
-for app, port in izip_longest(apps, ports, fillvalue=''):
+for app, port in zip_longest(apps, ports, fillvalue=''):
     app['port'] = port
     if port.isdigit():
         app['socket_family'] = socket.AF_INET
