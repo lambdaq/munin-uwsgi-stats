@@ -36,7 +36,7 @@ def config(apps):
 def get_data_from_uwsgi_stats_server(app):
     """Return a json object with stuff returned by the uwsgi stats server.
     """
-    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s = socket.socket(app['socket_family'], socket.SOCK_STREAM)
     s.settimeout(3)
     #print(app['socket_address'], flush=True, file=sys.stderr)
     s.connect(app['socket_address'])
